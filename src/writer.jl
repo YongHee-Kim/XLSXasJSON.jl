@@ -4,15 +4,14 @@ function write(file::AbstractString, jws::JSONWorksheet; kwargs...)
     end
 end
 function write(io::IO, jws::JSONWorksheet; indent = 2, drop_null = false)
-    if indent > 0 
-        JSON.print(io, Tables.rows(jws), indent)
-    else
-        JSON.print(io, Tables.rows(jws))
-    end
-    # drop null array such as [null, null, ....] 
+    data = indent > 0 ?
+        sprint(JSON.print, Tables.rows(jws), indent) :
+        sprint(JSON.print, Tables.rows(jws))
+    # drop null array such as [null, null, ....]
     if drop_null
-        replace!(io, r"(\"[\w]*\":null,)|(,?\"[\w]*\":null)" => "")
+        data = replace(data, r"(\"[\w]*\":null,)|(,?\"[\w]*\":null)" => "")
     end
+    Base.write(io, data)
     return io
 end
 

@@ -299,7 +299,7 @@ end
     jws[end, j"/b"] = "hooray"
     @test jws[end, j"/b"] == "hooray"
 
-    @test_throws ErrorException jws[j"/c::array"] = [1, 2]
+    @test_throws ArgumentError jws[j"/c::array"] = [1, 2]
 end
 
 @testset "JSONWorksheet - etc" begin 

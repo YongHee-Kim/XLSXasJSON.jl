@@ -36,7 +36,7 @@ function JSONWorkbook(xf::XLSX.XLSXFile, sheets = XLSX.sheetnames(xf); kwargs...
     @inbounds for (i, s) in enumerate(sheets)
         v[i] = JSONWorksheet(xf, s; kwargs...)
     end
-    close(xf)
+    applicable(close, xf) && close(xf)
 
     JSONWorkbook(xf, v)
 end
@@ -48,7 +48,7 @@ function JSONWorkbook(source::AbstractString, sheets, kwargs_per_sheet::Dict)
     @inbounds for (i, s) in enumerate(sheets)
         v[i] = JSONWorksheet(xf, s; kwargs_per_sheet[s]...)
     end
-    close(xf)
+    applicable(close, xf) && close(xf)
 
     JSONWorkbook(xf, v)
 end

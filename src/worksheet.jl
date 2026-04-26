@@ -64,7 +64,7 @@ end
 function JSONWorksheet(source, sheet; kwargs...)
     xf = XLSX.readxlsx(source)
     x = JSONWorksheet(xf, sheet; kwargs...)
-    close(xf)
+    applicable(close, xf) && close(xf)
     return x
 end
 
