@@ -9,7 +9,7 @@ Designated row or colum must be standardized [JSONPointer](https://tools.ietf.or
 You can read whole workbook, or specify sheet you want to read from Excel file.
 each rows on excel sheets are pared to `Array{OrderedDict, 1}` in Julia. 
 
-Please report bugs or make a feature request to [opening an issue](https://github.com/devsisters/XLSXasJSON.jl/issues/new)
+Please report bugs or make a feature request to [opening an issue](https://github.com/YongHee-Kim/XLSXasJSON.jl/issues/new)
 
 
 
