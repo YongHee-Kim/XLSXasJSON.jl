@@ -20,3 +20,7 @@ Designated row or colum must be standardized [JSONPointer](https://tools.ietf.or
 ```julia
 pkg> add XLSXasJSON
 ```
+
+## Acknowledgement
+The initial version of XLSXasJSON.jl was developed with the support from [Devsisters Corp.](https://github.com/Devsisters). And inspired by the design of [excel-as-json](https://github.com/stevetarver/excel-as-json)
+
