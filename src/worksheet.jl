@@ -27,7 +27,7 @@ function JSONWorksheet(source, sheet, arr;
     arr = dropemptyrange(arr)
     @assert !isempty(arr) "'$(source)!$(sheet)' don't have valid column names, try change optional argument'start_line'"
 
-    pointer = _column_to_pointer.(arr[1, :])
+    pointer = parse_column_header.(arr[1, :])
     real_keys = map(el -> el.tokens, pointer)
     # TODO more robust key validity check
     if !allunique(real_keys) 

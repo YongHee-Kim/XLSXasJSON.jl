@@ -1,10 +1,22 @@
 
 """
-_column_to_pointer{T}(p::Pointer)
+    parse_column_header(token_string)::Pointer
 
-construct JSONPointer.Pointer with specified type 
+Parse an Excel column header into a `JSONPointer.Pointer`.
+
+A leading `/` is added if missing, so both `"a/b"` and `"/a/b"` are accepted.
+A trailing `{jsontype}` suffix declares an array element type and produces a
+`Pointer{Array{T, 1}}`, where `T` is resolved by [`jsontype_to_juliatype`](@ref).
+Without the suffix, a plain (JSON)`Pointer` is returned.
+
+# Examples
+```julia
+parse_column_header("a/b")           # Pointer
+parse_column_header("/a/b")          # Pointer
+parse_column_header("a/b{integer}")  # Pointer{Array{Int, 1}}
+```
 """
-function _column_to_pointer(token_string::AbstractString)::Pointer
+function parse_column_header(token_string::AbstractString)::Pointer
     if !startswith(token_string, JSONPointer.TOKEN_PREFIX)
         token_string = "/" * token_string
     end
@@ -18,7 +30,7 @@ function _column_to_pointer(token_string::AbstractString)::Pointer
         return Pointer(token_string)
     end
 end
-_column_to_pointer(token) = _column_to_pointer(string(token))
+parse_column_header(token) = parse_column_header(string(token))
 
 function jsontype_to_juliatype(t)
     if t == "string"
