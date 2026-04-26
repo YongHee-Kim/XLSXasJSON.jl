@@ -366,6 +366,158 @@ end
     @test jws[:, j"/c"] == [[1.5,2.2], [3.0,55.0]]
 end
 
+@testset "JSONWorkbook - setindex! by Int" begin
+    xf = joinpath(data_path, "othercase.xlsx")
+    jwb = JSONWorkbook(xf)
+
+    src = jwb["mergeB"]
+    jwb[1] = src
+    @test jwb[1] === src
+end
+
+@testset "juliatype_to_jsontype" begin
+    f = XLSXasJSON.juliatype_to_jsontype
+    @test f(OrderedDict{String, Any}) == "object"
+    @test f(Vector{Any})               == "array"
+    @test f(Array{Int, 2})             == "array"
+    @test f(String)                    == "string"
+    @test f(Float64)                   == "number"
+    @test f(Int)                       == "integer"
+    @test f(Bool)                      == "boolean"
+    @test f(Missing)                   == "null"
+    @test f(Nothing)                   == "null"
+    @test f(Any)                       == ""
+
+    # fallback path: emits a warning and returns ""
+    local result
+    @test_logs (:warn, r"cannot find jsontype") begin
+        result = f(Symbol)
+    end
+    @test result == ""
+end
+
+@testset "Index" begin
+    Index = XLSXasJSON.Index
+
+    # constructors and basic accessors
+    empty_idx = Index()
+    @test length(empty_idx) == 0
+    @test names(empty_idx) == String[]
+    @test keys(empty_idx) == String[]
+
+    idx = Index(["a", "b", "c", "d"])
+    @test length(idx) == 4
+    @test names(idx) == ["a", "b", "c", "d"]
+    @test keys(idx) == ["a", "b", "c", "d"]
+
+    # `names` returns a copy — mutating the result must not affect the index
+    n = names(idx)
+    push!(n, "x")
+    @test length(idx) == 4
+
+    # copy / equality
+    idx2 = copy(idx)
+    @test idx2 == idx
+    @test isequal(idx2, idx)
+    @test idx2 !== idx
+    @test idx != Index(["a", "b", "c"])
+
+    # uniqueness assertion in constructor
+    @test_throws AssertionError Index(["a", "a"])
+
+    # haskey
+    @test haskey(idx, "a")
+    @test !haskey(idx, "z")
+    @test haskey(idx, 1)
+    @test haskey(idx, 4)
+    @test !haskey(idx, 0)
+    @test !haskey(idx, 5)
+    @test_throws ArgumentError haskey(idx, true)
+
+    # getindex with Bool is rejected
+    @test_throws ArgumentError idx[true]
+
+    # getindex with Integer
+    @test idx[1] == 1
+    @test idx[4] == 4
+    @test_throws BoundsError idx[0]
+    @test_throws BoundsError idx[5]
+
+    # getindex with AbstractVector{Int}
+    @test idx[[1, 2]] == [1, 2]
+    @test idx[Int[]] == Int[]
+    @test_throws BoundsError idx[[0, 1]]
+    @test_throws BoundsError idx[[1, 5]]
+    @test_throws ArgumentError idx[[1, 1]]
+
+    # getindex with AbstractRange{Int}
+    @test idx[1:2] == 1:2
+    @test idx[1:1:2] == [1, 2]
+    @test idx[2:1] == 2:1   # empty range
+    @test_throws BoundsError idx[0:2]
+    @test_throws BoundsError idx[1:5]
+
+    # getindex with Colon
+    @test idx[:] == Base.OneTo(4)
+
+    # getindex with AbstractVector{<:Integer} — non-Int integers route through
+    @test idx[Int8[1, 2]] == [1, 2]
+
+    # getindex with AbstractVector{Bool}
+    @test idx[[true, false, true, false]] == [1, 3]
+    @test_throws BoundsError idx[[true, false]]
+
+    # catch-all AbstractVector branch
+    @test idx[Any[]] == Int[]
+    @test idx[Any[1, 2]] == [1, 2]
+    @test idx[Any["a", "b"]] == [1, 2]
+    @test_throws ArgumentError idx[Any[1, true]]
+    @test_throws ArgumentError idx[Any[1.5, 2.5]]
+    @test_throws ArgumentError idx[Any[:a, :b]]
+
+    # getindex with Regex
+    @test idx[r"^a$"] == [1]
+    @test idx[r"."] == [1, 2, 3, 4]
+    @test idx[r"z"] == Int[]
+
+    # getindex with AbstractString — fuzzymatch / lookupname paths
+    @test idx["a"] == 1
+    @test idx["d"] == 4
+    @test_throws ArgumentError idx["zzz"]                 # no candidates
+    @test_throws ArgumentError idx["A"]                   # wrong-case fuzzy candidate
+    @test idx[AbstractString["a", "c"]] == [1, 3]
+    @test_throws ArgumentError idx[AbstractString["a", "a"]]
+end
+
+@testset "jsontype_to_juliatype" begin
+    @test XLSXasJSON.jsontype_to_juliatype("string")  == String
+    @test XLSXasJSON.jsontype_to_juliatype("number")  == Float64
+    @test XLSXasJSON.jsontype_to_juliatype("integer") == Int
+    @test XLSXasJSON.jsontype_to_juliatype("object")  == OrderedDict{String,Any}
+    @test XLSXasJSON.jsontype_to_juliatype("array")   == Vector{Any}
+    @test XLSXasJSON.jsontype_to_juliatype("boolean") == Bool
+    @test XLSXasJSON.jsontype_to_juliatype("null")    == Missing
+
+    @test_throws ErrorException XLSXasJSON.jsontype_to_juliatype("unknown")
+    @test_throws ErrorException XLSXasJSON.jsontype_to_juliatype("Int")
+    @test_throws ErrorException XLSXasJSON.jsontype_to_juliatype("")
+
+    # exercised through parse_column_header for the array-element branches
+    p_obj = XLSXasJSON.parse_column_header("/a{object}")
+    @test p_obj isa JSONPointer.Pointer{Array{OrderedDict{String,Any}, 1}}
+
+    p_arr = XLSXasJSON.parse_column_header("/a{array}")
+    @test p_arr isa JSONPointer.Pointer{Array{Vector{Any}, 1}}
+
+    p_bool = XLSXasJSON.parse_column_header("/a{boolean}")
+    @test p_bool isa JSONPointer.Pointer{Array{Bool, 1}}
+
+    p_null = XLSXasJSON.parse_column_header("/a{null}")
+    @test p_null isa JSONPointer.Pointer{Array{Missing, 1}}
+
+    @test_throws ErrorException XLSXasJSON.parse_column_header("/a{notatype}")
+end
+
 @testset "Deliminator for a Array in a cell" begin
     data = ["/a::array{number}" "/b::array{integer}" "/c::array";
             "1;2;3"     "4;5;6"   "abc;가나다"
