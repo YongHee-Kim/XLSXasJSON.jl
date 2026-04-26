@@ -6,7 +6,7 @@ Parse an Excel column header into a `JSONPointer.Pointer`.
 
 A leading `/` is added if missing, so both `"a/b"` and `"/a/b"` are accepted.
 A trailing `{jsontype}` suffix declares an array element type and produces a
-`Pointer{Array{T, 1}}`, where `T` is resolved by [`jsontype_to_juliatype`](@ref).
+`Pointer{Array{T, 1}}`, where `T` is resolved by `jsontype_to_juliatype`.
 Without the suffix, a plain (JSON)`Pointer` is returned.
 
 # Examples
