@@ -1,5 +1,5 @@
 Summary
-  Generated on: 04/26/2026 - 14:50:46
+  Generated on: 04/27/2026 - 10:36:49
   Parser: LCov
   Assemblies: 1
   Classes: 7
@@ -14,7 +14,7 @@ Summary
   Covered methods: 0
   Fully covered methods: 0
   Total methods: 0
-  Tag: 52_24957418679
+  Tag: 55_24990113773
 
 Default                88.7%
   src/index.jl         92.4%
