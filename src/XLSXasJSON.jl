@@ -15,9 +15,9 @@ include("worksheet.jl")
 include("workbook.jl")
 include("writer.jl")
 include("tables.jl")
+include("postprocess.jl")
 
 export JSONWorkbook, JSONWorksheet,
         hassheet, sheetnames,
         xlsxpath
-
 end # module
