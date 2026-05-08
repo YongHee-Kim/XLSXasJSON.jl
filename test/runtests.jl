@@ -531,6 +531,67 @@ end
     @test  jws[2]["b"] == [4, 5, 6]
     @test  jws[1]["c"] == ["abc", "가나다"]
     @test  jws[2]["c"] == ["abc", "가나다"]
-    
+
+end
+
+@testset "drop_null_objects!" begin
+    # Object arrays produced by indexed-pointer column headers.
+    # Row 1: both elements have data         -> both kept
+    # Row 2: second element entirely missing -> dropped, leaves a 1-element array
+    # Row 3: both elements entirely missing  -> empty array, the column itself stays
+    data = Any[
+        "/Key" "/ExpectedReward/1/Id" "/ExpectedReward/1/Count" "/ExpectedReward/2/Id" "/ExpectedReward/2/Count";
+        1      "Id.Item.A"                     1                          "Id.Item.B"                     2;
+        2      "Id.Item.X"                     5                          missing                         missing;
+        3      missing                         missing                    missing                         missing
+    ]
+    jws = JSONWorksheet("foo.xlsx", "Sheet1", data)
+
+    XLSXasJSON.drop_null_objects!(jws)
+
+    @test length(jws[1]["ExpectedReward"]) == 2
+    @test jws[1]["ExpectedReward"][1]["Id"] == "Id.Item.A"
+    @test jws[1]["ExpectedReward"][2]["Id"] == "Id.Item.B"
+
+    @test length(jws[2]["ExpectedReward"]) == 1
+    @test jws[2]["ExpectedReward"][1]["Id"] == "Id.Item.X"
+    @test jws[3]["ExpectedReward"] == []
+
+    # Returns the worksheet (for chaining) and is idempotent.
+    @test XLSXasJSON.drop_null_objects!(jws) === jws
+    XLSXasJSON.drop_null_objects!(jws)
+    @test length(jws[2]["ExpectedReward"]) == 1
+
+    # Partial-null elements are preserved (matches the user-supplied semantics
+    # that only fully-null objects are dropped).
+    data2 = Any[
+        "/Items/1/Key" "/Items/1/Value" "/Items/2/Key" "/Items/2/Value";
+        "A"            1                missing        2
+    ]
+    jws2 = JSONWorksheet("foo.xlsx", "Sheet1", data2)
+    XLSXasJSON.drop_null_objects!(jws2)
+    @test length(jws2[1]["Items"]) == 2
+    @test jws2[1]["Items"][2]["Value"] == 2
+    @test ismissing(jws2[1]["Items"][2]["Key"])
+
+    # Arrays of primitives must NOT be filtered, even when elements are missing.
+    # Mixed arrays (some elements dicts, some not) are left untouched.
+    data3 = Any[
+        "/Key" "/Tags{string}";
+        1       "alpha;beta"
+    ]
+    jws3 = JSONWorksheet("foo.xlsx", "Sheet1", data3)
+    jws3.data[1][JSONPointer.Pointer("/Numbers")] = Any[missing, 7]
+    jws3.data[1][JSONPointer.Pointer("/Mixed")] = Any[
+        OrderedDict{String,Any}("k" => missing),
+        42,
+    ]
+
+    XLSXasJSON.drop_null_objects!(jws3)
+
+    @test jws3[1]["Tags"] == ["alpha", "beta"]
+    @test isequal(jws3[1]["Numbers"], [missing, 7])
+    @test length(jws3[1]["Mixed"]) == 2
+    @test jws3[1]["Mixed"][2] == 42
 end
 

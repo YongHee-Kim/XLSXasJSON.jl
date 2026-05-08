@@ -175,15 +175,15 @@ function Base.haskey(jws::JSONWorksheet, key::Pointer)
     return false
 end
 
-Base.iterate(jws::JSONWorksheet) = iterate(Tables.rows(jws))
-Base.iterate(jws::JSONWorksheet, i) = iterate(Tables.rows(jws), i)
+Base.iterate(jws::JSONWorksheet) = iterate(jws.data)
+Base.iterate(jws::JSONWorksheet, i) = iterate(jws.data, i)
 
 Base.size(jws::JSONWorksheet) = (length(jws.data), length(jws.pointer))
 function Base.size(jws::JSONWorksheet, d)
-    d == 1 ? length(jws.data) : 
+    d == 1 ? length(jws.data) :
     d == 2 ? length(jws.pointer) : throw(DimensionMismatch("only 2 dimensions of `JSONWorksheets` object are measurable"))
 end
-Base.length(jws::JSONWorksheet) = length(Tables.rows(jws))
+Base.length(jws::JSONWorksheet) = length(jws.data)
 
 
 ########################################################################
@@ -315,8 +315,8 @@ function Base.sort!(jws::JSONWorksheet, key; kwargs...)
     sort!(jws, Pointer(key); kwargs...)
 end
 function Base.sort!(jws::JSONWorksheet, pointer::Pointer; kwargs...)
-    sorted_idx = sortperm(map(el -> el[pointer], Tables.rows(jws)); kwargs...)
-    jws.data = Tables.rows(jws)[sorted_idx]
+    sorted_idx = sortperm(map(el -> el[pointer], jws.data); kwargs...)
+    jws.data = jws.data[sorted_idx]
     return jws
 end
 
@@ -336,6 +336,6 @@ function Base.show(io::IO, jws::JSONWorksheet)
         
     summary(io, jws)
     pretty_table(io, Tables.matrix(jws);
-        header = pointer_to_colname.(Tables.columnnames(jws)), 
+        header = pointer_to_colname.(jws.pointer),
         alignment = alignment)
 end
