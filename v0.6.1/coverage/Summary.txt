@@ -1,0 +1,27 @@
+Summary
+  Generated on: 05/08/2026 - 07:30:48
+  Parser: LCov
+  Assemblies: 1
+  Classes: 8
+  Files: 8
+  Line coverage: 89%
+  Covered lines: 457
+  Uncovered lines: 56
+  Coverable lines: 513
+  Total lines: 910
+  Method coverage: 
+  Full method coverage: 
+  Covered methods: 0
+  Fully covered methods: 0
+  Total methods: 0
+  Tag: 59_25543087653
+
+Default                  89%
+  src/index.jl         92.4%
+  src/jsonpointer.jl   96.6%
+  src/postprocess.jl    100%
+  src/tables.jl        88.8%
+  src/workbook.jl      64.1%
+  src/worksheet.jl     90.9%
+  src/writer.jl        96.8%
+  src/XLSXasJSON.jl     100%
