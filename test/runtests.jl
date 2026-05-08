@@ -550,12 +550,11 @@ end
     XLSXasJSON.drop_null_objects!(jws)
 
     @test length(jws[1]["ExpectedReward"]) == 2
-    @test jws[1]["ExpectedReward"][1]["GameplayTag"] == "Id.Loot.A"
-    @test jws[1]["ExpectedReward"][2]["GameplayTag"] == "Id.Loot.B"
+    @test jws[1]["ExpectedReward"][1]["Id"] == "Id.Item.A"
+    @test jws[1]["ExpectedReward"][2]["Id"] == "Id.Item.B"
 
     @test length(jws[2]["ExpectedReward"]) == 1
-    @test jws[2]["ExpectedReward"][1]["GameplayTag"] == "Id.Loot.X"
-
+    @test jws[2]["ExpectedReward"][1]["Id"] == "Id.Item.X"
     @test jws[3]["ExpectedReward"] == []
 
     # Returns the worksheet (for chaining) and is idempotent.

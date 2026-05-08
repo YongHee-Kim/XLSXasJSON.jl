@@ -5,8 +5,8 @@ function write(file::AbstractString, jws::JSONWorksheet; kwargs...)
 end
 function write(io::IO, jws::JSONWorksheet; indent = 2, drop_null = false)
     data = indent > 0 ?
-        sprint(JSON.print, Tables.rows(jws), indent) :
-        sprint(JSON.print, Tables.rows(jws))
+        sprint(JSON.print, jws.data, indent) :
+        sprint(JSON.print, jws.data)
     # drop null array such as [null, null, ....]
     if drop_null
         data = replace(data, r"(\"[\w]*\":null,)|(,?\"[\w]*\":null)" => "")
