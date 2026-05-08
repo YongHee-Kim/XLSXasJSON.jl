@@ -249,8 +249,12 @@ function Base.setindex!(jws::JSONWorksheet, value::Vector, p::Pointer)
     end
     return jws
 end
-function Base.setindex!(jws::JSONWorksheet, value, i::Integer, p::Pointer) 
+function Base.setindex!(jws::JSONWorksheet, value, i::Integer, p::Pointer)
     jws[i][p] = value
+    if !haskey(jws, p)
+        push!(jws.pointer, p)
+    end
+    return jws
 end
 
 Base.firstindex(jws::JSONWorksheet) = firstindex(jws.data)
@@ -336,6 +340,6 @@ function Base.show(io::IO, jws::JSONWorksheet)
         
     summary(io, jws)
     pretty_table(io, Tables.matrix(jws);
-        header = pointer_to_colname.(jws.pointer),
+        column_labels = pointer_to_colname.(jws.pointer),
         alignment = alignment)
 end
