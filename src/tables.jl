@@ -45,7 +45,6 @@ end
 
 _column_symbol(p::Pointer) = Symbol("/" * join(p.tokens, "/"))
 _pointer_eltype(::Pointer{T}) where {T} = T
-_pointer_eltype(::Pointer) = Any
 
 # --- AbstractRow wrapper ------------------------------------------------------
 #
