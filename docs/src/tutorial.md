@@ -91,10 +91,11 @@ XLSXasJSON.write(pwd(), jwb)
 XLSXasJSON.write("Sheet1.json", jwb[1]; indent = 2)
 ```
 
-`write` accepts two formatting options:
+`write` accepts three formatting options, all forwarded to `JSON.jl`:
 
 - `indent` (default `2`) : number of spaces for pretty printing. Pass `0` for a compact, single-line JSON.
-- `drop_null` (default `false`) : when `true`, fields whose value is `null` are stripped from the output.
+- `omit_null` (default `false`) : when `true`, fields whose value is `null` are dropped from the output. Recurses into nested objects and arrays.
+- `omit_empty` (default `false`) : when `true`, fields whose value is empty (empty `Dict`, `Array`, `String`, etc.) are dropped from the output.
 
 ### Writing back to XLSX
 

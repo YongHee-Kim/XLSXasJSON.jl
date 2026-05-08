@@ -7,6 +7,6 @@ XLSXasJSON.JSONWorksheet
 XLSXasJSON.merge
 XLSXasJSON.fuzzymatch
 XLSXasJSON.parse_column_header
-XLSXasJSON.drop_null_objects!
+XLSXasJSON.omit_null_objects!
 
 ```

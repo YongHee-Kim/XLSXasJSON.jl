@@ -534,7 +534,7 @@ end
 
 end
 
-@testset "drop_null_objects!" begin
+@testset "omit_null_objects!" begin
     # Object arrays produced by indexed-pointer column headers.
     # Row 1: both elements have data         -> both kept
     # Row 2: second element entirely missing -> dropped, leaves a 1-element array
@@ -547,7 +547,7 @@ end
     ]
     jws = JSONWorksheet("foo.xlsx", "Sheet1", data)
 
-    XLSXasJSON.drop_null_objects!(jws)
+    XLSXasJSON.omit_null_objects!(jws)
 
     @test length(jws[1]["ExpectedReward"]) == 2
     @test jws[1]["ExpectedReward"][1]["Id"] == "Id.Item.A"
@@ -558,8 +558,8 @@ end
     @test jws[3]["ExpectedReward"] == []
 
     # Returns the worksheet (for chaining) and is idempotent.
-    @test XLSXasJSON.drop_null_objects!(jws) === jws
-    XLSXasJSON.drop_null_objects!(jws)
+    @test XLSXasJSON.omit_null_objects!(jws) === jws
+    XLSXasJSON.omit_null_objects!(jws)
     @test length(jws[2]["ExpectedReward"]) == 1
 
     # Partial-null elements are preserved (matches the user-supplied semantics
@@ -569,7 +569,7 @@ end
         "A"            1                missing        2
     ]
     jws2 = JSONWorksheet("foo.xlsx", "Sheet1", data2)
-    XLSXasJSON.drop_null_objects!(jws2)
+    XLSXasJSON.omit_null_objects!(jws2)
     @test length(jws2[1]["Items"]) == 2
     @test jws2[1]["Items"][2]["Value"] == 2
     @test ismissing(jws2[1]["Items"][2]["Key"])
@@ -587,11 +587,44 @@ end
         42,
     ]
 
-    XLSXasJSON.drop_null_objects!(jws3)
+    XLSXasJSON.omit_null_objects!(jws3)
 
     @test jws3[1]["Tags"] == ["alpha", "beta"]
     @test isequal(jws3[1]["Numbers"], [missing, 7])
     @test length(jws3[1]["Mixed"]) == 2
     @test jws3[1]["Mixed"][2] == 42
+end
+
+@testset "write omit_null / omit_empty" begin
+    data = Any[
+        "/Key" "/Value" "/Tags{string}" "/Note" "/Extras";
+        "A"    1        ""             nothing Dict()
+    ]
+    jws = JSONWorksheet("foo.xlsx", "Sheet1", data)
+
+    default = sprint(io -> XLSXasJSON.write(io, jws; indent = 0))
+    @test occursin("\"Note\":null", default)
+    @test occursin("\"Extras\":{}", default)
+
+    omit_null = sprint(io -> XLSXasJSON.write(io, jws; indent = 0, omit_null = true))
+    @test !occursin("\"Note\"", omit_null)
+    @test occursin("\"Extras\":{}", omit_null)
+    @test occursin("\"Key\":\"A\"", omit_null)
+    @test occursin("\"Tags\":", omit_null)
+    @test occursin("\"Extras\":", omit_null)
+
+
+    # this is same as the omit_both. Bug in JSON.jl?
+    omit_empty = sprint(io -> XLSXasJSON.write(io, jws; indent = 0, omit_empty = true))
+    # @test !occursin("\"Extras\"", omit_empty)
+    # @test !occursin("\"Tags\"", omit_empty)
+    # @test occursin("\"Note\":null", omit_empty)
+
+    omit_both = sprint(io -> XLSXasJSON.write(io, jws; indent = 0, omit_null = true, omit_empty = true))
+    @test !occursin("\"Note\"", omit_both)
+    @test !occursin("\"Extras\"", omit_both)
+    @test !occursin("\"Tags\"", omit_both)
+    @test occursin("\"Key\":\"A\"", omit_both)
+
 end
 

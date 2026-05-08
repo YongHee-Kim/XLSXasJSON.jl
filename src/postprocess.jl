@@ -29,13 +29,13 @@ function _prune_null_objects!(v)
 end
 
 """
-    drop_null_objects!(jws::JSONWorksheet)
+    omit_null_objects!(jws::JSONWorksheet)
 
 Walk every row and drop elements of object arrays whose every field is `missing`
 or `nothing`. Recurses into nested dicts and arrays. Mixed arrays (some elements
 dicts, some not) are left untouched. Returns `jws`.
 """
-function drop_null_objects!(jws::JSONWorksheet)
+function omit_null_objects!(jws::JSONWorksheet)
     for row in jws.data
         for p in keys(row)
             row[p] = _prune_null_objects!(row[p])
