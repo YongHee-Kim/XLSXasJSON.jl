@@ -141,7 +141,7 @@ end
     ws1 = jwb[:mergeA]
     ws2 = jwb[:mergeB]
 
-    @test_throws AssertionError merge(ws1, ws2, "/Something")
+    @test_throws KeyError merge(ws1, ws2, "/Something")
 
     new_sheet = merge(ws1, ws2, "/Key")
     @test collect(keys(new_sheet[1])) == ["Key", "Address", "Name", "Property"]
@@ -176,7 +176,7 @@ end
     ws2 = jwb["Sheet2"]
     ws3 = jwb["Sheet3"]
     
-    @test_throws AssertionError append!(ws1, ws3)
+    @test_throws ArgumentError append!(ws1, ws3)
 
     @test length(ws1) == 1
     @test length(ws2) == 2
@@ -321,16 +321,16 @@ end
 
 @testset "Asserts" begin
     xf = joinpath(data_path, "assert.xlsx")
-    @test_throws AssertionError JSONWorksheet(xf, "dup")
-    @test_throws AssertionError JSONWorksheet(xf, "dup2")
-    @test_throws AssertionError JSONWorksheet(xf, "dup3")
+    @test_throws ArgumentError JSONWorksheet(xf, "dup")
+    @test_throws ArgumentError JSONWorksheet(xf, "dup2")
+    @test_throws ArgumentError JSONWorksheet(xf, "dup3")
 
     @test_throws Exception JSONWorksheet(xf, "dict_array")
     @test_throws Exception JSONWorksheet(xf, "array_dict")
 
-    @test_throws AssertionError JSONWorksheet(xf, "start_line")
+    @test_throws ArgumentError JSONWorksheet(xf, "start_line")
     @test JSONWorksheet(xf, "start_line";start_line=2) isa JSONWorksheet
-    @test_throws AssertionError JSONWorksheet(xf, "empty")
+    @test_throws ArgumentError JSONWorksheet(xf, "empty")
 end
 
 @testset "missingdata" begin

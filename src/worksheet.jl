@@ -25,13 +25,13 @@ end
 function JSONWorksheet(source, sheet, arr; 
                         delim=";", squeeze=false)
     arr = dropemptyrange(arr)
-    @assert !isempty(arr) "'$(source)!$(sheet)' don't have valid column names, try change optional argument'start_line'"
+    isempty(arr) && throw(ArgumentError("'$(source)!$(sheet)' don't have valid column names, try change optional argument 'start_line'"))
 
     pointer = parse_column_header.(arr[1, :])
     real_keys = map(el -> el.tokens, pointer)
-    # TODO more robust key validity check
-    if !allunique(real_keys) 
-        throw(AssertionError("column names must be unique, check for duplication $(arr[1, :])"))
+    if !allunique(real_keys)
+        dups = unique([join(k, "/") for k in real_keys if count(==(k), real_keys) > 1])
+        throw(ArgumentError("column names must be unique in sheet '$(sheet)' ($(size(arr, 1))×$(size(arr, 2))); duplicates: [$(join(dups, ", "))]"))
     end
 
     if squeeze
@@ -276,8 +276,8 @@ function Base.merge(a::JSONWorksheet, b::JSONWorksheet, key::AbstractString)
     merge(a::JSONWorksheet, b::JSONWorksheet, Pointer(key))
 end
 function Base.merge(a::JSONWorksheet, b::JSONWorksheet, key::Pointer)    
-    @assert haskey(a, key) "$key is not found in the JSONWorksheet(\"$(a.sheetname)\")"
-    @assert haskey(b, key) "$key is not found in the JSONWorksheet(\"$(b.sheetname)\")"
+    haskey(a, key) || throw(KeyError("$key is not found in the JSONWorksheet(\"$(a.sheetname)\")"))
+    haskey(b, key) || throw(KeyError("$key is not found in the JSONWorksheet(\"$(b.sheetname)\")"))
     
     pointers = unique([a.pointer; b.pointer])
     
@@ -308,7 +308,7 @@ function Base.append!(a::JSONWorksheet, b::JSONWorksheet)
     bk = map(el -> el.tokens, keys(b))
     
     if sort(ak) != sort(bk)
-        throw(AssertionError("""Column names must be same for append!
+        throw(ArgumentError("""Column names must be same for append!
          $(setdiff(collect(ak), collect(bk)))"""))
     end
 
